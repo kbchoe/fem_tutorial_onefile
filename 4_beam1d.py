@@ -216,7 +216,6 @@ F_full[3] = 39062
 F_full[4] = -31250
 F_full[5] = 13021
 
-
 fixed_nodes = [0,1, 2,]
 idx = [i for i in range(row_size) if i not in fixed_nodes]
 idx2d = np.ix_(idx,idx)
