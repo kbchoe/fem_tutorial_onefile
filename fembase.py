@@ -161,11 +161,6 @@ def get_lsm_frame2d(E,A,I, p1,p2):
     ]
     ).reshape(6,6) #global to local
 
-    # raw = [Cx,-Cy,0, Cy,Cx,0, 0,0,1]
-    # sub = np.array(raw).reshape(3,3)
-    # zero = np.zeros( (3,3) )
-    # T = np.block([ [sub,zero],[zero,sub] ]).T  # make it global to local.
-
     #F=kU / TF=kTU / F = T.TkTU , K=T.TkT (when K global, k local.)
     lsm_global = T.T@esm@T  # T is global to local transformation matrix.
     return lsm_global
@@ -319,10 +314,6 @@ def get_lsm_q4(E, nu, t, coords):
 
 def get_lsm(edata, node_coords):
     "element / node data"
-    # n1,n2 = edata['nodes']  # 1d element has 2 nodes.
-    # p1 = node_data[n1]  #access via node_id.
-    # p2 = node_data[n2]
-
     etype = edata['etype']
 
     #line-line elements.
@@ -398,7 +389,8 @@ def example_lsm_spring():
     for dim in range(1,4):
         lsm = get_lsm_spring(dim, k,p1,p2)
         print(lsm, 'dim :',dim)
-
+        plt.spy(lsm)
+        plt.show()
 
 
 
@@ -427,8 +419,6 @@ def get_gsm(node_dof, node_data, element_data,elements):
         nodes = element['nodes']
         node_coords = [ node_data[node_id] for node_id in nodes]
         lsm = get_lsm(edata,node_coords)
-        
-        nodes = element['nodes']
         
         idx = []
         for node_id in nodes:
@@ -736,6 +726,7 @@ fixed_data = {
 solve_data = solve( mesh_data,load_data,fixed_data)
 post_data = post_process( mesh_data,load_data,fixed_data, solve_data)
 plot_elements(post_data, title= f'3D Line plot for {element_data[1]['etype']}')
+plot_elements(post_data, title= f'3D Line plot for {element_data[1]['etype']}',true_ratio=True)
 
 
 
@@ -801,6 +792,7 @@ fixed_data = {
 solve_data = solve( mesh_data,load_data,fixed_data)
 post_data = post_process( mesh_data,load_data,fixed_data, solve_data)
 plot_elements(post_data, title= f'3D Line plot for {element_data[1]['etype']}')
+plot_elements(post_data, title= f'3D Line plot for {element_data[1]['etype']}',true_ratio=True)
 
 
 
