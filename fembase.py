@@ -10,6 +10,15 @@ import matplotlib.pyplot as plt
 
 #pretty print
 from pprint import pprint
+
+
+
+
+
+
+
+
+
 #========================helper function
 
 def get_directional_cosine(p1,p2):
@@ -35,6 +44,71 @@ def get_dof_data(etype):
     elif etype == '3dFrame':#xyz phi xyz        
         dof_data = ('x','y','z', 'rx','ry','rz')
     return dof_data
+
+
+def salt_U(U_full,etype):
+    dof_data = get_dof_data(etype)
+    node_dof = len(dof_data)
+    U_salted = {}
+
+    for idx,U in enumerate(U_full.reshape(-1,node_dof)):            
+        U_salted[idx+1] = {i:U[idx] for idx,i in enumerate(dof_data)}
+    return U_salted
+
+
+def plot_elements(post_data, title='3D plot', scale=30,true_ratio=False):
+    XYZ = post_data['XYZ']
+    DXYZ = post_data['DXYZ']
+    TX,TY,TZ = [],[],[] #total
+    for X,Y,Z in XYZ:
+        TX.extend(X)
+        TY.extend(Y)
+        TZ.extend(Z)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    for idx, [X,Y,Z] in enumerate(XYZ):
+        ax.plot(X, Y, Z, marker='o', linewidth=1)
+        
+        DX,DY,DZ = DXYZ[idx]
+        DX = np.array(X)+np.array(DX)*scale
+        DY = np.array(Y)+np.array(DY)*scale
+        DZ = np.array(Z)+np.array(DZ)*scale
+        ax.plot(DX, DY, DZ, marker='*',linestyle='--', linewidth=2)
+
+    
+    #ratio ignored when <1.0 ,not bad.
+    if true_ratio:
+        dx = abs(max(TX)-min(TX))
+        dy = abs(max(TY)-min(TY))
+        dz = abs(max(TZ)-min(TZ))
+
+        div = min([dx,dy,dz])
+        if div == 0:
+            div=1
+
+        sx = max(1, dx/div)
+        sy = max(1, dy/div)
+        sz = max(1, dz/div)
+        ax.set_box_aspect([sx,sy,sz])
+    # Set the limits of the axes to visualize the aspect ratio clearly
+    
+    # Set labels
+    ax.set_xlabel('X axis')
+    ax.set_ylabel('Y axis')
+    ax.set_zlabel('Z axis')
+    ax.set_title(title)
+
+    # Show plot
+    plt.show()
+
+
+
+
+
+
+
 
 #========================base lsm functions
 
@@ -167,6 +241,11 @@ def get_lsm_frame3d(E,A,Iy,Iz,G,J, p1,p2):
 
 
 
+
+
+
+
+
 #========================create lsm
 
 def get_lsm(edata, node_coords):
@@ -251,6 +330,9 @@ def example_lsm_spring():
 
 
 
+
+
+
 #======================== gsm
 
 def nid_to_idxs(node_dof, node_id):
@@ -310,6 +392,11 @@ def get_free_idx(node_dof, row_size,fixed_data):
 
 
 
+
+
+
+
+
 #========================= solve
 
 def solve(mesh_data, load_data,fixed_data):
@@ -345,99 +432,12 @@ def solve(mesh_data, load_data,fixed_data):
 #============================ post process
 
 
-# def salt_U(U_full,etype):
-#     dof_data = get_dof_data(etype)
-#     U_salted = {}
-#     if etype in ('1dSpring','1dRod'):
-#         for idx,i in enumerate(U_full.reshape(-1,node_dof)):            
-#             U_salted[idx+1] = {'x':i[0]}
-#     elif etype == '2dTruss':
-#         for idx,i in enumerate(U_full.reshape(-1,node_dof)):
-#             U_salted[idx+1] = {'x':i[0],'y':i[1],}
-#     elif etype == '3dTruss':
-#         for idx,i in enumerate(U_full.reshape(-1,node_dof)):
-#             U_salted[idx+1] = {'x':i[0],'y':i[1],'z':i[2],}    
-#     elif etype == '2dFrame':#xy phi
-#         for idx,i in enumerate(U_full.reshape(-1,node_dof)):
-#             U_salted[idx+1] = {'x':i[0],'y':i[1],'rz':i[2],}        
-#     elif etype == '3dFrame':#xyz phi xyz
-#         for idx,i in enumerate(U_full.reshape(-1,node_dof)):
-#             U_salted[idx+1] = {'x':i[0],'y':i[1],'z':i[2], 'rx':i[3],'ry':i[4],'rz':i[5],}
-#     return U_salted
-
-def salt_U(U_full,etype):
-    dof_data = get_dof_data(etype)
-    node_dof = len(dof_data)
-    U_salted = {}
-
-    for idx,U in enumerate(U_full.reshape(-1,node_dof)):            
-        U_salted[idx+1] = {i:U[idx] for idx,i in enumerate(dof_data)}
-    return U_salted
 
 
-def plot_elements(post_data, title='3D plot', scale=30,true_ratio=False):
-    XYZ = post_data['XYZ']
-    DXYZ = post_data['DXYZ']
-    TX,TY,TZ = [],[],[] #total
-    for X,Y,Z in XYZ:
-        TX.extend(X)
-        TY.extend(Y)
-        TZ.extend(Z)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
 
-    for idx, [X,Y,Z] in enumerate(XYZ):
-        ax.plot(X, Y, Z, marker='o', linewidth=1)
-        
-        DX,DY,DZ = DXYZ[idx]
-        DX = np.array(X)+np.array(DX)*scale
-        DY = np.array(Y)+np.array(DY)*scale
-        DZ = np.array(Z)+np.array(DZ)*scale
-        ax.plot(DX, DY, DZ, marker='*',linestyle='--', linewidth=2)
 
-    # for DX,DY,DZ in DXYZ:
-        # ax.plot(DX, DY, DZ, marker='*',linestyle='--', linewidth=2)
-    
-    
-    #lim not today.
-    # x_min, x_max = np.min(X), np.max(X)
-    # y_min, y_max = np.min(DY), np.max(DY)
-    # z_min, z_max = np.min(DZ), np.max(DZ)
-    #what if ,0,?
-    # print(X)
-    # ax.set_xlim(x_min-abs(x_min)*0.1, x_max*1.1)
-    # ax.set_ylim(y_min, y_max)
-    # ax.set_zlim(z_min, z_max)
-    # dx=abs(x_max-x_min)
-    # dy=abs(y_max-y_min)
-    # dz=abs(z_max-z_min)
-    # print([dx,dy/dx,dz/dx])
-    
-    #ratio ignored when <1.0 ,not bad.
-    if true_ratio:
-        dx = abs(max(TX)-min(TX))
-        dy = abs(max(TY)-min(TY))
-        dz = abs(max(TZ)-min(TZ))
 
-        div = min([dx,dy,dz])
-        if div == 0:
-            div=1
-
-        sx = max(1, dx/div)
-        sy = max(1, dy/div)
-        sz = max(1, dz/div)
-        ax.set_box_aspect([sx,sy,sz])
-    # Set the limits of the axes to visualize the aspect ratio clearly
-    
-    # Set labels
-    ax.set_xlabel('X axis')
-    ax.set_ylabel('Y axis')
-    ax.set_zlabel('Z axis')
-    ax.set_title(title)
-
-    # Show plot
-    plt.show()
 
 
 
@@ -452,30 +452,8 @@ def post_process(mesh_data, load_data,fixed_data, solved_data):
     etype = element_data[elements[0]['edata']]['etype']
     salted_data = salt_U(solved_data,etype)
     # pprint(salted_data)
-    
-
-    #dirty code for display nodes xyz
-    # node_disp = {}
-    
-    # iters = len(solved_data)//node_dof
-    # for i in range(0,iters):
-    #     # x = [i, i + 1, i + 2]
-    #     idxs = [i*node_dof+j for j in range(node_dof)]
-        
-    #     x = [solved_data[idx] for idx in idxs]
-    #     node_disp[i+1] = x
-
-    # disp = []
-    # for idx,i in enumerate(solved_data):
-    #     idx = idx//node_dof
-    #     if idx == 0:
-    #     print(idx,i, )
-    # disp_data = np.zeros(len(node_data)*3).reshape(-1,3)
-    # disp = np.array(solved_data).reshape(-1,node_dof)
-    #x,y,th ->(.T)-> xxx,yyy,ththth
 
     #=================
-    # Create a 3D plot
     XYZ = []
     DXYZ = []
 
@@ -496,9 +474,6 @@ def post_process(mesh_data, load_data,fixed_data, solved_data):
 
         XYZ.append([X,Y,Z])
         DXYZ.append([DX,DY,DZ])
-        # TX.extend(X)
-        # TY.extend(Y)
-        # TZ.extend(Z)
     
     post_data = {
     'XYZ':XYZ,
